@@ -3,6 +3,7 @@
 const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
+const checkAuth = require('../middlewares/check-auth');
 
 const Product = require('../models/product');
 //or import {Product} from '../models/product';
@@ -17,36 +18,34 @@ router.get('/', async(req, res) => {
     }
 });
 
-router.post('/', async(req, res) => {
-    try{
-        const { name, price, productImage } = req.body;
-
-        if(!req.body.name || 
-            !req.body.price 
-        ){
-            return res.status(400).send({
-                message:"Please provide all the details"
-            })
-        }
-
-        const newProduct = new Product({
-            name,
-            price,
-            productImage
+router.post('/', checkAuth,  async(req, res) => {
+    console.log('Request body:', req.body);
+    try {
+      const { name, price, productImage } = req.body;
+      console.log('Extracted data:', { name, price, productImage });
+  
+      if (!name || !price) {
+        return res.status(400).json({
+          message: "Please provide both name and price",
+          providedFields: Object.keys(req.body)
         });
-
-        const product =await Product.create(newProduct);
-        
-
-        return res.status(201).json({product,message:"Created successfully"});
-
+      }
+  
+      const newProduct = new Product({
+        name,
+        price: Number(price),  // Ensure price is a number
+        productImage
+      });
+  
+      const product = await Product.create(newProduct);
+      return res.status(201).json({ product, message: "Created successfully" });
+    } catch(error) {
+      console.error('Error:', error);
+      res.status(500).json({ message: error.message });
     }
-    catch(error){
-        res.status(500).send({message:error.message});
+  });
 
-    }
-    
-});
+
 
 router.get('/:productId',async(req,res)=>{
     try {
@@ -97,7 +96,7 @@ router.get('/name/:productName', async (req, res) => {
 
 
 
-router.patch('/:productId',async(req,res)=>{
+router.patch('/:productId',checkAuth,async(req,res)=>{
     try {
         const { productId } = req.params;
         const updates = req.body;
@@ -114,7 +113,7 @@ router.patch('/:productId',async(req,res)=>{
 
 });
 
-router.delete('/:productId',async(req,res)=>{
+router.delete('/:productId',checkAuth,async(req,res)=>{
     try {
         const { productId } = req.params.productId;
         const deletedProduct = await Product.findByIdAndDelete(productId);
