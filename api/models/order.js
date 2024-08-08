@@ -4,12 +4,20 @@ const mongoose = require('mongoose');
 const AutoIncrement = require('mongoose-sequence')(mongoose);
 
 const orderSchema = new mongoose.Schema({
-    product: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true }, // to get the product details
+    product: { 
+        type: mongoose.Schema.Types.ObjectId,
+         ref: 'Product',
+          required: true 
+        }, // to get the product details
     quantity: {
         type: Number,
         default: 1
     },
-    orderNumber: { type: Number, unique: true } // Auto-incrementing field
+    orderNumber:
+     { 
+        type: Number, 
+        unique: true 
+    } // Auto-incrementing field
 });
 
 // Apply the auto-increment plugin to orderSchema

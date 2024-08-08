@@ -3,8 +3,7 @@
 const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
-const checkAuth = require('../middlewares/check-auth');
-
+const checkAdmin = require('../middlewares/check-admin');
 const Product = require('../models/product');
 //or import {Product} from '../models/product';
 
@@ -18,13 +17,13 @@ router.get('/', async(req, res) => {
     }
 });
 
-router.post('/', checkAuth,  async(req, res) => {
-    console.log('Request body:', req.body);
+router.post('/', checkAdmin,  async(req, res) => {
+    
     try {
-      const { name, price, productImage } = req.body;
-      console.log('Extracted data:', { name, price, productImage });
+      const { name, price } = req.body;
+      console.log(req.body);
   
-      if (!name || !price) {
+      if (!req.body.name || !req.body.price) {
         return res.status(400).json({
           message: "Please provide both name and price",
           providedFields: Object.keys(req.body)
@@ -34,10 +33,10 @@ router.post('/', checkAuth,  async(req, res) => {
       const newProduct = new Product({
         name,
         price: Number(price),  // Ensure price is a number
-        productImage
+        
       });
   
-      const product = await Product.create(newProduct);
+      const product = await newProduct.save();
       return res.status(201).json({ product, message: "Created successfully" });
     } catch(error) {
       console.error('Error:', error);
@@ -96,7 +95,7 @@ router.get('/name/:productName', async (req, res) => {
 
 
 
-router.patch('/:productId',checkAuth,async(req,res)=>{
+router.patch('/:productId',checkAdmin,async(req,res)=>{
     try {
         const { productId } = req.params;
         const updates = req.body;
@@ -113,10 +112,10 @@ router.patch('/:productId',checkAuth,async(req,res)=>{
 
 });
 
-router.delete('/:productId',checkAuth,async(req,res)=>{
+router.delete('/:productId',checkAdmin,async(req,res)=>{
     try {
-        const { productId } = req.params.productId;
-        const deletedProduct = await Product.findByIdAndDelete(productId);
+        const { productId } = req.params;
+        const deletedProduct = await Product.findOneAndDelete({productId:productId});
 
         if (!deletedProduct) {
             return res.status(404).send({ message: 'Product not found' });

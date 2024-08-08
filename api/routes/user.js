@@ -9,18 +9,21 @@ const jwt = require('jsonwebtoken');
 const checkAuth = require('../middlewares/check-auth');
 
 
-const User = require("../models/user");
 const user = require("../models/user");
 
 router.post("/signup", (req, res) => {
+  if(!req.body.email || !req.body.password){
+    return res.status(400).json({message : "Provide the req details"});
+  }
     bcrypt.hash(req.body.password, 10, (err, hash) => {
         if (err) {
           return res.status(500).send({ message: 'Error hashing password' });
         }
     
-        const newUser = new User({
+        const newUser = new user({
           email:req.body.email,
           password: hash,
+          isAdmin : req.body.isAdmin
         });
     
         newUser
@@ -41,7 +44,11 @@ router.post("/signup", (req, res) => {
 //generating jwt 
 
 router.post('/signin', (req, res) => {
-  User.find({ email: req.body.email })
+  if(!req.body.email || !req.body.password){
+    return res.status(400).json({message : "Provide the req details"});
+  }
+
+  user.find({ email: req.body.email })
     .then(users => {
       if (users.length === 0) {
         return res.status(401).json({ message: 'Email not found' });
@@ -54,12 +61,13 @@ router.post('/signin', (req, res) => {
           return res.status(401).json({ message: 'Invalid password' });
         }
         const token = jwt.sign({
-          email: users[0].email,
-          userId: users[0]._id
+           userId: users[0]._id,
+           isAdmin : users[0].isAdmin
         }, process.env.JWT_KEY, {
           expiresIn: "1h"
         });
-        return res.status(200).json({ token });
+        return res.status(200).json({ message:"signed in successfully",
+          token });
       });
     })
     .catch(err => {
@@ -70,21 +78,71 @@ router.post('/signin', (req, res) => {
 
 
 
-router.delete('/:userId',checkAuth,async(req,res)=>{
-    try {
-        const { userId } = req.params.userId;
-        const deleted = await Product.findByIdAndDelete(userId);
 
-        if (!deleted) {
-            return res.status(404).send({ message: 'user not found' });
+// Patch route to update user details
+router.patch('/', checkAuth, async (req, res) => {
+    try {
+        const { email, updateFields } = req.body;
+
+        if (!email || !updateFields || Object.keys(updateFields).length === 0) {
+            return res.status(400).json({ message: "Provide the email and details to update" });
         }
 
-        res.status(200).send({ message: 'user deleted successfully' });
+        // Find the user by email and update specified fields
+        const updatedUser = await User.findOneAndUpdate(
+            { email },
+            { $set: updateFields },
+            { new: true, runValidators: true }
+        );
+
+        if (!updatedUser) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        res.status(200).json({ message: 'User updated successfully', user: updatedUser });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+
+
+
+router.delete('/',checkAuth,async(req,res)=>{
+  try {
+    if(!req.body.email ){
+      return res.status(400).json({message : "Provide the req details"});
+    }
+      const deleted = await user.findOneAndDelete({email:req.body.email});
+
+      if (!deleted) {
+          return res.status(404).send({ message: 'user not found' });
+      }
+
+      res.status(200).send({ message: 'user deleted successfully' });
+  } catch (error) {
+      res.status(500).send({ message: error.message });
+  }
+});
+
+
+router.delete('/:id',checkAuth,async(req,res)=>{
+    try {
+      
+        const { id } = req.params;
+        console.log(id);
+        const deleted = await user.findByIdAndDelete(id);
+
+        if (!deleted) {
+            return res.status(404).send({ message: 'user not found',
+              id});
+        }
+
+        res.status(200).send({ message: 'user deleted successfully' ,id});
     } catch (error) {
         res.status(500).send({ message: error.message });
     }
 });
-
 
 
 module.exports = router;

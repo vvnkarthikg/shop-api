@@ -1,6 +1,5 @@
 //we install mongoose-sequence to auto-increment order id
 
-
 const mongoose = require('mongoose');
 const AutoIncrement = require('mongoose-sequence')(mongoose);
 
@@ -21,6 +20,10 @@ const productSchema = new mongoose.Schema({
     productId: { // Auto-incrementing field
         type: Number,
         unique: true
+    },
+    quantity:{
+        type:Number,
+        default:0
     }
 }, {
     timestamps: true

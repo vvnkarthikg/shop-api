@@ -10,6 +10,8 @@ const mongoose = require('mongoose');
 const productRoutes = require('./api/routes/products'); 
 const orderRoutes = require('./api/routes/orders');
 const userRoutes = require('./api/routes/user');
+const home = require('./api/routes/home');
+
 
 // Middleware to parse JSON request bodies
 app.use(express.json());
@@ -20,6 +22,8 @@ app.use(cors());
 app.use('/products', productRoutes); 
 app.use('/orders', orderRoutes);
 app.use('/user',userRoutes);
+app.use('/',home);
+
 
 // Database connection
 const dbURL = process.env.database_url ;

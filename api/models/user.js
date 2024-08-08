@@ -20,6 +20,10 @@ const userSchema = mongoose.Schema({
     userId:{
         type:Number,
         unique:true
+    },
+    isAdmin:{
+        type:Boolean,
+        default:false
     }
 });
 
