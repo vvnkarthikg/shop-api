@@ -16,7 +16,7 @@ const home = require('./api/routes/home');
 // Middleware to parse JSON request bodies
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(cors());
+app.use(cors({origin:'http://localhost:3000'}));
 
 // Mount the routers
 app.use('/products', productRoutes); 
@@ -36,7 +36,7 @@ mongoose.connect(dbURL)
     });
 
 // Start the server
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 5000;
 app.listen(port, () => {
     console.log(`Server running at http://localhost:${port}/`);
 });
